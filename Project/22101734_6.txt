@@ -1,0 +1,275 @@
+module HLSM(input logic clk, res, isexternal, loadIM, nextInstruction, loadRF, [6:0]RF_in, [8:0]userIn, output reg [6:0]seg, signed [3:0]ALU_result);
+    reg [11:0]userInput = {RF_in[4], RF_in[5], RF_in[6], userIn[0], userIn[1], userIn[2], userIn[3], userIn[4], userIn[5], userIn[6], userIn[7], userIn[8]};
+    reg IM_out;
+    reg [11:0]curInstruction;
+    reg [2:0]currentInstructionPC;
+    reg M_re, M_we, RF_we;
+    reg [1:0]select;
+    reg [2:0]opcode;
+    reg [3:0]M_add;
+    reg [2:0]RF_wa;
+    reg [2:0]RF_ad1;
+    reg [2:0]RF_ad2;
+    reg signed [3:0]RF_directlyWD;
+    reg [2:0]RF_directlyWA;
+    reg RF_directlyWrite;
+    /*
+    logic clkSlowed;
+    logic isexternalDebounced;
+    logic loadIMDebounced;
+    logic nextInstructionDebounced;
+    logic loadRFDebounced;
+    logic resDebounced;
+    clockDivider cd1(clk, clkSlowed);
+    buttonDebouncer db1(clk, isexternal, isexternalDebounced);
+    buttonDebouncer db2(clk, loadIM, loadIMDebounced);
+    buttonDebouncer db3(clk, nextInstruction, nextInstructionDebounced);
+    buttonDebouncer db4(clk, loadRF, loadRFDebounced);
+    buttonDebouncer db5(clk, res, resDebounced);
+    */
+    reg [3:0]RF_out1;
+    reg [3:0]RF_out2;
+    seg_decoder decoder(clkOut, RF_out1, seg);
+    clockDivider cd(clk, clkOut);
+    controlUnit CU(clkOut, res, isexternal, nextInstruction, loadIM, loadRF, RF_in, userInput, M_re, M_we, RF_we, select, curInstruction, RF_directlyWrite, RF_directlyWD, RF_directlyWA);
+    datapath datapath(clkOut, res, RF_directlyWrite, RF_directlyWD, RF_directlyWA, M_we, M_re, RF_we, select, curInstruction, RF_out1, RF_out2, ALU_result);
+endmodule
+
+module seg_decoder (
+  input reg clk,  
+  input reg [3:0] data,  // 4-bit input to be decoded
+  output reg [6:0] seg   // 7-segment display output
+);
+always @(posedge clk)
+    begin
+    seg = (data == 4'b0000) ? 7'b1000000 :  // 0
+               (data == 4'b0001) ? 7'b1111001 :  // 1
+               (data == 4'b0010) ? 7'b0100100 :  // 2
+               (data == 4'b0011) ? 7'b0110000 :  // 3
+               (data == 4'b0100) ? 7'b0011001 :  // 4
+               (data == 4'b0101) ? 7'b0010010 :  // 5
+               (data == 4'b0110) ? 7'b0000010 :  // 6
+               (data == 4'b0111) ? 7'b1111000 :  // 7
+               (data == 4'b1000) ? 7'b0000000 :  // 8
+               (data == 4'b1001) ? 7'b0011000 :  // 9
+               (data == 4'b1010) ? 7'b0001000 :  // A
+               (data == 4'b1011) ? 7'b0000011 :  // B
+               (data == 4'b1100) ? 7'b1000110 :  // C
+               (data == 4'b1101) ? 7'b0100001 :  // D
+               (data == 4'b1110) ? 7'b0000110 :  // E
+               7'b0001110;                        // F
+    end
+endmodule
+
+module controlUnit(input logic clk, res, isexternal, nextInstruction, loadIM, loadRF, [6:0]RF_in, [11:0]userInput, output logic M_re, M_we, RF_we, [1:0]select, [2:0]opcode, [2:0]RF_ad1, [2:0]RF_ad2, [2:0]RF_wa, [3:0]M_add, output logic RF_directlyWrite, [2:0]RF_directlyWA, [3:0]RF_directlyWD);
+    //reg [2:0]nextInstructionPC = 3'b000;
+
+    //PC PC(clk, res, PC_en, nextInstructionPC, currentInstructionPC);
+    //instructionMemory IM(clk, res, userInput, currentInstructionPC, loadIM, IM_out);
+    //muxtwo_one mux(IM_out, userInput, isexternal, muxRes);
+    controller controller(clk, res, nextInstruction, loadRF, RF_in, IR_out, M_re, M_we, RF_we, select, opcode, RF_ad1, RF_ad2, RF_wa, M_add, RF_directlyWrite, RF_directlyWA, RF_directlyWD);
+    /*
+    always_comb
+        begin
+            if((nextInstruction) && (nextInstructionPC <= 3'b111)) nextInstructionPC = nextInstructionPC + 1;
+            else nextInstructionPC = nextInstructionPC;
+        end
+        */
+endmodule
+
+module controller(input logic clk, res, nextInstruction, loadRF, [6:0]RF_in, input logic [11:0]instruction, output logic M_re, M_we, RF_we, [1:0]select, [2:0]opcode, [2:0]RF_ad1, [2:0]RF_ad2, [2:0]RF_wa, [3:0]M_add, output logic RF_directlyWrite,[2:0]RF_directlyWA, signed [3:0]RF_directlyWD);
+    parameter fetch  = 4'b0000;
+    parameter decode = 4'b0001;
+    parameter load   = 4'b0010;
+    parameter store  = 4'b0011;
+    parameter sub    = 4'b0100;
+    parameter add    = 4'b0101;
+    parameter asc    = 4'b0110;
+    parameter des    = 4'b0111;
+    parameter disp   = 4'b1000;
+    parameter sort1  = 4'b1001;
+    parameter sort2  = 4'b1010;
+    
+    reg [11:0]IM[8];
+    assign IM[0] = 12'b110000000111;
+    reg [11:0]IR;
+    reg [11:0]IR_next;
+    reg [2:0]PC = 3'b0;
+    reg [2:0]PC_next = 3'b0;
+    
+    reg [3:0]state;
+    reg [3:0]nextstate = fetch;
+    reg [3:0]dispC = 3'b0;
+    reg [3:0]dispC_next = 3'b0;
+    
+    always @(*) 
+        begin
+        M_re = 1'b0;
+        M_we = 1'b0;
+        RF_we = 1'b0;
+        if(state == fetch) begin
+            M_re = 1'b0;
+            M_we = 1'b0;
+            RF_we = 1'b0;
+            nextstate = decode;
+            PC_next = PC;
+            IR_next = IM[PC];
+            dispC_next = dispC;
+        end
+        else if(state == decode) begin
+            M_we = 1'b0;
+            M_re = 1'b0;
+            RF_we = 1'b0;
+            PC_next = PC;
+            dispC_next = dispC;
+    		if(IR[11:9] == 3'b000) begin
+                nextstate = load;
+            end
+            else if(IR[11:9] == 3'b001) begin
+                nextstate = store;
+            end
+            else if(IR[11:9] == 3'b010) begin
+                nextstate = sub;
+            end
+            else if(IR[11:9] == 3'b011) begin
+                nextstate = add;
+            end
+            else if(IR[11:9] == 3'b100) begin //asc
+                nextstate = asc;
+            end
+            else if(IR[11:9] == 3'b101) begin //des
+                nextstate = des;
+            end
+            else if(IR[11:9] == 3'b110) begin //disp
+                nextstate = disp;
+            end
+       end 
+       else if(state == load) begin
+            select = 2'b00;
+            M_we = 1'b0;
+            M_re = 1'b1;
+            RF_we = 1'b1;
+            opcode = 3'b000;
+            RF_wa = IR[6:4];
+            M_add = IR[3:0];
+            nextstate = fetch;
+            PC_next = PC + 3'b1;
+       end
+       else if(state == store) begin
+            select = 2'b00;
+            M_we = 1'b1;
+            M_re = 1'b0;
+            RF_we = 1'b0;
+            opcode = 3'b001;
+            RF_ad1 = IR[6:4];
+            M_add = IR[3:0];            
+            nextstate = fetch;
+            PC_next = PC + 3'b1;
+        end
+        else if(state == sub) begin
+            select = 2'b01;
+            M_we = 1'b0;
+            M_re = 1'b0;
+            RF_we = 1'b1;
+            opcode = 3'b010;
+            RF_ad1 = IR[5:3]; 
+            RF_ad2 = IR[2:0]; 
+            RF_wa = IR[8:6];             
+            nextstate = fetch;
+            PC_next = PC + 3'b1;
+        end
+        else if(state == add) begin
+            select = 2'b01;
+            M_we = 1'b0;
+            M_re = 1'b0;
+            RF_we = 1'b1;
+            opcode = 3'b011;
+            RF_ad1 = IR[5:3]; 
+            RF_ad2 = IR[2:0]; 
+            RF_wa = IR[8:6]; 
+            nextstate = fetch;
+            PC_next = PC + 3'b1;
+        end
+        else if(state == disp) begin
+            select = 2'b01;
+            M_we = 1'b0;
+            M_re = 1'b0;
+            RF_we = 1'b0;
+            opcode = 3'b110;
+            RF_ad1 = dispC;
+            nextstate = fetch;
+            dispC_next = dispC + 3'b1;
+        end
+    end
+    always @(posedge clk)
+        begin
+            state <= nextstate;
+            dispC <= dispC_next;
+            PC <= PC_next;
+            IR <= IR_next;
+        end  
+endmodule
+
+module registerFile(input logic clk, res, [2:0] RF_ad1, [2:0] RF_ad2, [2:0] RF_wa, input logic signed[3:0] RF_wd ,input logic RF_we, output logic signed[3:0] RF_d1, output logic signed[3:0] RF_d2);
+    reg [3:0] array[8];
+    assign array[0] = 5;
+    assign array[1] = 5;
+    assign array[2] = 5;
+    assign array[3] = 5;
+    assign array[4] = 5;
+    always @(posedge clk)
+        begin
+            if(res)
+                begin
+                    for(int i = 0; i < 8; i = i + 1)
+                            array[i] <= 4'b0000;
+                end
+            else if(RF_we) array[RF_wa] <= RF_wd;
+        end
+    assign RF_d1 = array[RF_ad1];
+    assign RF_d2 = array[RF_ad2];       
+endmodule
+
+module clockDivider(input logic inClk, output logic outClk);
+    logic [25:0] counter = {26{1'b0}};
+    always @(posedge inClk)
+        begin
+            counter <= counter + 1;
+        end
+        logic last = counter[26];
+        BUFG BUFG_inst (.I(last),.O(outClk));
+endmodule
+
+module ALU(input logic signed [3:0] in1, input logic signed [3:0] in2, input logic [2:0] select, output logic signed [3:0] out);
+    always_comb 
+        begin
+            case (select)
+                3'b010: out = in1 - in2;
+                3'b011: out = in1 + in2;
+                default: out = 4'b0000; // default to 0
+            endcase
+        end
+endmodule
+
+module dataMemory(input logic clk, res, input logic signed [3:0]M_wd, input logic [3:0]M_add, input logic M_we, input logic M_re, output logic signed [3:0]M_rd);
+    reg [3:0] array[16];
+    assign array[0] = 4'b0000;
+    assign array[1] = 4'b0001;
+    assign array[2] = 4'b0010;
+    assign array[3] = 4'b0011;
+    assign array[4] = 4'b0100;
+    assign array[5] = 4'b0101;
+    assign array[6] = 4'b0110;
+    assign array[7] = 4'b0111;
+    assign array[8] = 4'b1000;
+    always @(posedge clk)
+        begin
+            if(res)
+                begin
+                    for(int i = 0; i < 16; i = i + 1)
+                            array[i] <= 4'b0000;
+                end
+            else if(M_we) array[M_add] <= M_wd;
+        end
+    assign M_rd = (M_re) ? array[M_add] : 4'b0000;
+endmodule
