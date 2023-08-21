@@ -1,0 +1,118 @@
+module serialAdder(input logic clk, res, load, shift, [7:0]in1, in2, output reg [7:0] sum);
+    logic cin, cout;
+    wire  [7:0]res1, res2, res3;
+    shiftregister sr1(clk, res, shift, in1, load, res1);
+    shiftregister sr2(clk, res, shift, in2, load, res2);
+    logic ffclk = clk & shift;
+    dflipflop ff(ffclk, res, cout, cin);
+    fullAdder adder(res1, res2, cin, res3, cout);
+    shiftregister sr3(clk, res, shift, res3, load, sum); 
+endmodule
+
+module shiftregister(
+  input clk,
+  input res,
+  input shift,
+  input [7:0] d,
+  input load,
+  output reg [7:0] q
+);
+  always @(posedge clk or posedge res) begin
+    if (res) begin
+      q <= 0;
+    end else if (load) begin
+      q <= d; 
+    end if (shift) begin
+      q <= {q[6:0], q[7]};
+    end
+  end
+
+endmodule
+
+module dflipflop(input logic clk, res, d, output logic q);
+    always@(posedge clk)
+        begin
+            if(res) q <= 1'b0;
+            else q <= d;
+        end
+endmodule
+
+module fullAdder(input logic p, q, cin, output logic sum, cout);
+    assign sum = p ^ q ^ cin;
+    assign cout = ((p ^ q) & cin) | (p & q);
+endmodule
+
+module clockDivider(input logic inClk, res, output logic outClk);
+    logic [25:0] counter = {26{1'b0}};
+    always @(posedge inClk)
+        begin
+            if(res) counter <= 0;
+            else counter <= counter + 1;
+        end
+        logic last = counter[25];
+        BUFG BUFG_inst (.I(last),.O(outClk));
+endmodule
+
+module mux21(input logic a, b, s, output logic y);
+    assign y = (~s & a) + (s & b);
+endmodule
+
+module serialAdder_tb();
+    logic clk, res, load, shift; 
+    logic [7:0]in1, in2, sum;
+    serialAdder sa(clk, res, load, shift, in1, in2, sum);
+    always
+        begin
+            clk = 0; #5; clk = 1; #5;
+        end
+    initial
+        begin
+            res = 0; load = 0;
+            in1[0] = 0; in2[0]=0;
+            in1[1] = 0; in2[1]=1;
+            in1[2] = 0; in2[2]=0;
+            in1[3] = 0; in2[3]=1;
+            in1[4] = 1; in2[4]=0;
+            in1[5] = 0; in2[5]=0;
+            in1[6] = 1; in2[6]=0;
+            in1[7] = 0; in2[7]=0;
+            load = 1;#10;load = 0;
+            shift = 0; #10; shift = 1; #10;
+            shift = 0; #10; shift = 1; #10;
+            shift = 0; #10; shift = 1; #10;
+            shift = 0; #10; shift = 1; #10;
+
+          end
+endmodule
+
+module shiftregister_tb();
+    logic clk, res, load, sr; 
+    logic [7:0]d, q;
+    shiftregister shift(clk, res, sr, d, load, q);
+    always
+        begin
+            clk = 0; #5; clk = 1; #5;
+        end
+    integer i;
+    initial begin
+            res = 0; load = 0;
+            d[7] = 1;
+            d[6] = 0;
+            d[5] = 0;
+            d[4] = 1;
+            d[3] = 0;
+            d[2] = 1;
+            d[1] = 1;
+            d[0] = 0; load = 1;#10; load = 0;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+            sr = 0; #10; sr = 1; #10;
+        
+         end  
+endmodule
+

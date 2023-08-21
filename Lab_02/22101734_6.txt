@@ -1,0 +1,77 @@
+module twoBitAdder(input logic a0, b0, a1, b1, cin0, output logic sum0, sum1, cout2);
+    logic cout1;
+    fullAdder fulAdder1(a0, b0, cin0, sum0, cout1);
+    fullAdder fulAdder2(a1, b1, cout1, sum1, cout2);
+endmodule
+
+module testbench4();
+    logic a0, b0, a1, b1, cin0, sum0, sum1, cout2;
+    twoBitAdder tbA(a0, b0, a1, b1, cin0, sum0, sum1, cout2);
+    initial begin
+        a0 = 0; b0 = 0; a1 = 0; b1 = 0; cin0 = 0; #10;
+        a0 = 0; b0 = 0; a1 = 0; b1 = 0; cin0 = 1; #10;
+        a0 = 0; b0 = 0; a1 = 0; b1 = 1; cin0 = 0; #10;
+        a0 = 0; b0 = 0; a1 = 1; b1 = 0; cin0 = 0; #10;
+        a0 = 0; b0 = 1; a1 = 0; b1 = 0; cin0 = 0; #10;
+        a0 = 0; b0 = 0; a1 = 0; b1 = 1; cin0 = 1; #10;
+        a0 = 0; b0 = 0; a1 = 1; b1 = 0; cin0 = 1; #10;
+        a0 = 0; b0 = 1; a1 = 0; b1 = 0; cin0 = 1; #10;
+        a0 = 0; b0 = 0; a1 = 1; b1 = 1; cin0 = 1; #10;
+        a0 = 0; b0 = 1; a1 = 1; b1 = 0; cin0 = 1; #10;
+        a0 = 0; b0 = 1; a1 = 0; b1 = 1; cin0 = 1; #10;
+        a0 = 0; b0 = 1; a1 = 1; b1 = 1; cin0 = 0; #10;
+        a0 = 0; b0 = 1; a1 = 1; b1 = 1; cin0 = 1; #10;
+        a0 = 0; b0 = 0; a1 = 1; b1 = 1; cin0 = 0; #10;
+        a0 = 0; b0 = 1; a1 = 0; b1 = 1; cin0 = 0; #10;
+        a0 = 0; b0 = 1; a1 = 1; b1 = 0; cin0 = 0; #10;
+        a0 = 1; b0 = 0; a1 = 0; b1 = 0; cin0 = 0; #10;
+        a0 = 1; b0 = 0; a1 = 0; b1 = 0; cin0 = 1; #10;
+        a0 = 1; b0 = 0; a1 = 0; b1 = 1; cin0 = 0; #10;
+        a0 = 1; b0 = 0; a1 = 1; b1 = 0; cin0 = 0; #10;
+        a0 = 1; b0 = 1; a1 = 0; b1 = 0; cin0 = 0; #10;
+        a0 = 1; b0 = 0; a1 = 0; b1 = 1; cin0 = 1; #10;
+        a0 = 1; b0 = 0; a1 = 1; b1 = 0; cin0 = 1; #10;
+        a0 = 1; b0 = 1; a1 = 0; b1 = 0; cin0 = 1; #10;
+        a0 = 1; b0 = 0; a1 = 1; b1 = 1; cin0 = 0; #10;
+        a0 = 1; b0 = 1; a1 = 0; b1 = 1; cin0 = 0; #10;
+        a0 = 1; b0 = 1; a1 = 1; b1 = 0; cin0 = 0; #10;
+        a0 = 1; b0 = 1; a1 = 1; b1 = 1; cin0 = 0; #10;
+        a0 = 1; b0 = 1; a1 = 1; b1 = 0; cin0 = 1; #10;
+        a0 = 1; b0 = 1; a1 = 0; b1 = 1; cin0 = 1; #10;
+        a0 = 1; b0 = 0; a1 = 1; b1 = 1; cin0 = 1; #10;
+        a0 = 1; b0 = 1; a1 = 1; b1 = 1; cin0 = 1; #10;
+    end
+endmodule
+
+module labCalculator(input logic a, b, c, d, output logic y, z);
+    logic i0, i1, i2, i3, z1, z2;
+    assign i0 = a ^ b;
+    assign i1 = ~(a & b);
+    halfAdder adder(a, b, i2, z1);
+    halfSubtractor subtractor(a, b, i3, z2);
+    mux41 mux1(c, d, i0, i1, i2, i3, y);
+    mux21 mux2(z1, z2, d, z);
+endmodule
+
+module testbench5();
+    logic a, b, c, d, y, z;
+    labCalculator labCalc(a, b, c, d, y, z);
+    initial begin
+        c = 0; d = 0; a = 0; b = 0; #10;
+        c = 0; d = 0; a = 0; b = 1; #10;
+        c = 0; d = 0; a = 1; b = 0; #10;
+        c = 0; d = 0; a = 1; b = 1; #10;
+        c = 0; d = 1; a = 0; b = 0; #10;
+        c = 0; d = 1; a = 0; b = 1; #10;
+        c = 0; d = 1; a = 1; b = 0; #10;
+        c = 0; d = 1; a = 1; b = 1; #10;
+        c = 1; d = 0; a = 0; b = 0; #10;
+        c = 1; d = 0; a = 0; b = 1; #10;
+        c = 1; d = 0; a = 1; b = 0; #10;
+        c = 1; d = 0; a = 1; b = 1; #10;
+        c = 1; d = 1; a = 0; b = 0; #10;
+        c = 1; d = 1; a = 0; b = 1; #10;
+        c = 1; d = 1; a = 1; b = 0; #10;
+        c = 1; d = 1; a = 1; b = 1; #10;
+    end
+endmodule

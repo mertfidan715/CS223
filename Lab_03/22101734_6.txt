@@ -1,0 +1,187 @@
+module mux21(input logic n1, n2, s, output logic res);
+    assign res = (~s & n1) + (s & n2);
+endmodule
+
+module mux21_tb();
+    logic n1, n2, s, res;
+    mux21 mux(n1, n2, s, res);
+    initial begin
+        n1 = 0; n2 = 0; s = 0; #10;
+        n1 = 0; n2 = 0; s = 1; #10;
+        n1 = 0; n2 = 1; s = 0; #10;
+        n1 = 0; n2 = 1; s = 1; #10;
+        n1 = 1; n2 = 0; s = 0; #10;
+        n1 = 1; n2 = 0; s = 1; #10;
+        n1 = 1; n2 = 1; s = 0; #10;
+        n1 = 1; n2 = 1; s = 1; #10;
+    end       
+endmodule
+
+module mux41(input logic d1, d2, d3, d4, s1, s2, output logic y);
+    logic out1, out2;
+    mux21 first(d1, d2, s1, out1);
+    mux21 second(d3, d4, s1, out2);
+    mux21 third(out1, out2, s2, y);
+endmodule
+
+module mux41_tb();
+    logic d[3:0], s[1:0], y;
+    mux41 mux4to1(d[0], d[1], d[2], d[3], s[0], s[1], y);
+    initial begin
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 0; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 0; s[1] = 1; #10;        
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 0; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 0; #10; 
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 0; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 0; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 0; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 0; s[0] = 1; s[1] = 1; #10;
+        d[0] = 1; d[1] = 1; d[2] = 1; d[3] = 1; s[0] = 1; s[1] = 1; #10;
+    end
+endmodule
+
+module mux81(input logic in0, in1, in2, in3, in4, in5, in6, in7, sel0, sel1, sel2, output logic y);
+    logic muxRes1, muxRes2, andRes1, andRes2;
+    mux41 firstMux(in0, in1, in2, in3, sel0, sel1, muxRes1);
+    mux41 secondMux(in4, in5, in6, in7, sel0, sel1, muxRes2);
+    assign andRes1 = muxRes1 & ~sel2;
+    assign andRes2 = muxRes2 & sel2;
+    assign y = andRes1 | andRes2;
+endmodule
+
+module mux81_tb();
+    logic in[0:7], sel[2:0], y;
+    mux81 mux81(in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7], sel[0], sel[1], sel[2], y);
+    initial begin
+        for(int j = 0; j < 8; j = j+1)
+        begin
+            {sel[0], sel[1], sel[2]} = j;
+            for(int i = 0; i < 256; i = i+1)
+                begin
+                    #0.25;
+                    {in[0],in[1],in[2],in[3],in[4],in[5],in[6],in[7]} = i;
+                end
+            #0.25;
+        end
+    end
+endmodule
+
+module decoder12(input logic i, en, output logic y0, y1);
+    assign y0 = i & en;
+    assign y1 = ~i & en;
+endmodule
+
+module decoder12_tb();
+    logic in, en, y[1:0];
+    decoder12 decoder(in, en, y[0], y[1]);
+    initial begin
+        in = 0; en = 0; #10;
+        in = 0; en = 1; #10;
+        in = 1; en = 0; #10;
+        in = 1; en = 1; #10;
+    end
+endmodule
+
+module decoder2to4(input logic in0, in1 , en, output logic y0, y1, y2, y3);
+    logic out1, out2;
+    decoder12 first(in0, en, out1, out2);
+    decoder12 second(in1, out1, y0, y1);
+    decoder12 third(in1, out2, y2, y3);
+endmodule
+
+module decoder24_tb();
+    logic in1, in2, en, out1, out2, out3, out4;
+    decoder2to4 decoder(in1, in2, en, out1, out2, out3, out4);
+    initial begin
+        en = 0; in1 = 0; in2 = 0; #10;
+        en = 0; in1 = 0; in2 = 1; #10;
+        en = 0; in1 = 1; in2 = 0; #10;
+        en = 0; in1 = 1; in2 = 1; #10;
+        en = 1; in1 = 0; in2 = 0; #10;
+        en = 1; in1 = 0; in2 = 1; #10;
+        en = 1; in1 = 1; in2 = 0; #10;
+        en = 1; in1 = 1; in2 = 1; #10;
+    end
+endmodule
+
+module labFunction(input logic a, b, c, d, output logic res);
+    mux81 mux(c, c, c, c, ~c, ~c, ~c, ~c, d, c, a, res);
+endmodule
+
+module labFunction_tb();
+    logic a, b, c, d, res;
+    labFunction F(a, b, c, d, res);
+    initial begin
+        a = 0; b = 0; c = 0; d = 0; #10;
+        a = 0; b = 0; c = 0; d = 1; #10;
+        a = 0; b = 0; c = 1; d = 0; #10;
+        a = 0; b = 1; c = 0; d = 0; #10;
+        a = 0; b = 0; c = 1; d = 1; #10;
+        a = 0; b = 1; c = 0; d = 1; #10;
+        a = 0; b = 1; c = 1; d = 0; #10;
+        a = 0; b = 1; c = 1; d = 1; #10;
+        a = 1; b = 0; c = 0; d = 0; #10;
+        a = 1; b = 0; c = 0; d = 1; #10;
+        a = 1; b = 0; c = 1; d = 0; #10;
+        a = 1; b = 1; c = 0; d = 0; #10;
+        a = 1; b = 0; c = 1; d = 1; #10;
+        a = 1; b = 1; c = 0; d = 1; #10;
+        a = 1; b = 1; c = 1; d = 0; #10;
+        a = 1; b = 1; c = 1; d = 1; #10;
+    end     
+endmodule
